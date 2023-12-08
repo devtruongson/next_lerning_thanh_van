@@ -1,13 +1,21 @@
 "use client";
+import { IPagin } from "@/app/(marketing)/page";
 import { UpdateUserAction } from "@/app/actions";
 import { IUser } from "@/utils/interface";
-import { Button, Input, Modal, Table } from "antd";
+import { Button, Input, Modal, PaginationProps, Table } from "antd";
 import { ColumnsType } from "antd/es/table";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import React, { ChangeEvent, useState } from "react";
 
-const TabelUser: React.FC<{ data: IUser[] }> = ({ data }) => {
+const TabelUser: React.FC<{ data: IUser[]; pagin: IPagin }> = ({
+    data,
+    pagin,
+}) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [userUpdate, setUserUpdate] = useState<IUser>({});
+
+    const { replace } = useRouter();
+    const pathname = usePathname();
 
     const columns: ColumnsType<IUser> = [
         {
@@ -39,6 +47,13 @@ const TabelUser: React.FC<{ data: IUser[] }> = ({ data }) => {
             },
         },
     ];
+
+    const handleChange = (data: PaginationProps): void => {
+        const params = new URLSearchParams();
+        params.set("_page", String(data.current ?? 1));
+        params.set("_limit", String(pagin.limit));
+        replace(`${pathname}?${params}`);
+    };
 
     return (
         <>
@@ -83,7 +98,17 @@ const TabelUser: React.FC<{ data: IUser[] }> = ({ data }) => {
                 </form>
             </Modal>
 
-            <Table dataSource={data} columns={columns} />
+            <Table
+                rowKey={"id"}
+                dataSource={data}
+                columns={columns}
+                onChange={handleChange}
+                pagination={{
+                    pageSize: pagin.limit,
+                    total: pagin.totalCount,
+                    defaultCurrent: 1,
+                }}
+            />
         </>
     );
 };
